@@ -1,6 +1,6 @@
 # docflow-portal
 
-Multi-tenant document intake and workflow prototype. Clients upload, a team queue processes, results are delivered. Sample data only.
+Multi-tenant document intake and workflow prototype. Clients upload, a team queue processes, results are delivered. Sample data only
 
 This repo holds clickable concepts for one pattern: an outside party submits documents, an internal team works them through a queue, and the result goes back to the submitter, with each client seeing only their own records. The first concept applies it to a fictional engineering-calculation service.
 
