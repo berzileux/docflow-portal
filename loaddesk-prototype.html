@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoadDesk portal prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f8fb;
+    --white: #ffffff;
+    --ink: #14283f;
+    --ink-soft: #4a5c72;
+    --blue: #2456a6;
+    --blue-dark: #183d78;
+    --grid: #d6e0ee;
+    --line: #c3cfdf;
+    --amber: #a95a07;
+    --amber-bg: #fdf0dc;
+    --green: #1b6e47;
+    --green-bg: #e1f3e9;
+    --slate-bg: #e8edf4;
+    --sky-bg: #dde9fa;
+    --head: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+    --body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: var(--body); font-size: 16px; line-height: 1.5; color: var(--ink); background: var(--paper); -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; letter-spacing: 0.01em; margin: 0; line-height: 1.15; }
+  h1 { font-size: 34px; } h2 { font-size: 24px; } h3 { font-size: 18px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  a { color: var(--blue); }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border: 1px solid var(--blue); background: var(--blue); color: #fff; font-weight: 600; border-radius: 3px; cursor: pointer; min-height: 42px; }
+  .btn:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
+  .btn.ghost { background: transparent; color: var(--blue); }
+  .btn.ghost:hover { background: var(--sky-bg); }
+  .btn.small { padding: 6px 12px; min-height: 34px; font-size: 14px; }
+  .btn.green { background: var(--green); border-color: var(--green); }
+  .btn.green:hover { background: #14573a; border-color: #14573a; }
+
+  /* login */
+  .login { min-height: 100vh; display: grid; grid-template-columns: 1.15fr 1fr; }
+  .login-art { position: relative; background: var(--ink); color: #fff; padding: 56px 56px 40px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
+  .login-art::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(130,170,230,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(130,170,230,.16) 1px, transparent 1px); background-size: 32px 32px; }
+  .login-art > * { position: relative; }
+  .brand { font-family: var(--head); font-size: 26px; font-weight: 700; letter-spacing: .02em; }
+  .brand span { color: #8fb4ee; }
+  .login-art h1 { font-size: 46px; max-width: 14ch; margin: 28px 0 14px; }
+  .login-art p { color: #c4d3ea; max-width: 38ch; margin: 0; font-size: 18px; }
+  .plan-svg { width: 100%; max-width: 520px; margin-top: 28px; }
+  .art-note { color: #9db3d3; font-size: 14px; }
+  .login-form-wrap { display: flex; align-items: center; justify-content: center; padding: 40px 28px; }
+  .login-form { width: 100%; max-width: 400px; }
+  .login-form h2 { margin-bottom: 6px; }
+  .login-form .sub { color: var(--ink-soft); margin: 0 0 24px; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .field label { font-weight: 600; font-size: 15px; }
+  .field input, .field select, .field textarea { padding: 10px 12px; border: 1px solid var(--line); background: var(--white); border-radius: 3px; min-height: 42px; }
+  .field textarea { min-height: 84px; resize: vertical; }
+  .field .hint { font-size: 14px; color: var(--ink-soft); }
+  .error { background: #fde8e6; color: #8d1f14; padding: 10px 12px; border-radius: 3px; margin-bottom: 16px; font-size: 15px; }
+  .demo-box { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .demo-box p { margin: 0 0 8px; font-size: 14px; color: var(--ink-soft); }
+  .demo-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+
+  /* shell */
+  .topbar { background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 58px; gap: 16px; }
+  .topbar .brand { font-size: 22px; }
+  .topbar .who { display: flex; align-items: center; gap: 16px; font-size: 15px; color: #d4e0f3; flex-wrap: wrap; justify-content: flex-end; }
+  .topbar .tenant { color: #fff; font-weight: 600; }
+  .role-tag { background: #8fb4ee; color: var(--ink); font-size: 13px; font-weight: 600; padding: 2px 9px; border-radius: 99px; }
+  .linkbtn { background: none; border: 0; color: #9cc0f5; cursor: pointer; padding: 4px 0; text-decoration: underline; }
+  .page .linkbtn, .panel .linkbtn { color: var(--blue); }
+  .page { max-width: 1120px; margin: 0 auto; padding: 28px 28px 64px; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+  .page-head p { margin: 4px 0 0; color: var(--ink-soft); }
+
+  /* demo bar */
+  .demobar { background: var(--amber-bg); border-bottom: 1px solid #ecd2a8; padding: 8px 28px; font-size: 14px; color: #6d3b04; }
+  .demobar .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .demobar .lbl { font-weight: 600; margin-right: 4px; }
+  .pbtn { border: 1px solid #d9b57f; background: #fff8ec; color: #6d3b04; padding: 4px 11px; border-radius: 99px; cursor: pointer; font-size: 14px; }
+  .pbtn:hover { background: #fff; }
+  .pbtn[aria-pressed="true"] { background: #6d3b04; color: #fff; border-color: #6d3b04; }
+  .demobar .sep { width: 1px; height: 20px; background: #d9b57f; margin: 0 4px; }
+  .demobar summary { cursor: pointer; font-weight: 600; }
+  .demobar p { margin: 8px 0 2px; }
+
+  /* story bar: shows only the current step */
+  .storybar { background: var(--sky-bg); border-bottom: 2px solid var(--blue); padding: 12px 28px; }
+  .storybar .sb-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .storybar .sb-head strong { font-family: var(--head); font-size: 19px; }
+  .storybar .sb-body { display: flex; align-items: center; justify-content: flex-start; gap: 20px; flex-wrap: wrap; margin-top: 6px; }
+  .storybar p { margin: 0; font-size: 17px; max-width: 80ch; }
+  .sb-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .dots { display: inline-flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--blue); background: transparent; }
+  .dot.done { background: var(--blue); }
+  .dot.now { background: #fff; box-shadow: 0 0 0 3px rgba(36,86,166,.25); }
+  .login.withbar { min-height: calc(100vh - 92px); }
+
+  /* google-style sign-in (simulated) */
+  .gbtn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 11px 16px; border: 1px solid var(--line); background: var(--white); border-radius: 3px; cursor: pointer; font-weight: 600; min-height: 46px; }
+  .gbtn:hover { background: var(--paper); }
+  .gbtn .g { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink-soft); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+  .modal-back { position: fixed; inset: 0; background: rgba(20,40,63,.55); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 20; }
+  .modal { background: var(--white); width: 100%; max-width: 420px; padding: 22px; border-radius: 3px; max-height: 90vh; overflow: auto; }
+  .acct-list { display: flex; flex-direction: column; gap: 6px; }
+  .acct { display: flex; gap: 12px; align-items: center; text-align: left; padding: 10px 12px; border: 1px solid var(--line); background: var(--white); border-radius: 3px; cursor: pointer; }
+  .acct:hover { background: var(--paper); }
+  .acct .av { width: 34px; height: 34px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; }
+  .acct .who2 { display: flex; flex-direction: column; }
+  .reg-add { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-top: 12px; }
+  .reg-add .field { margin: 0; }
+
+  /* strip, toolbar, tables */
+  .strip { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); background: var(--white); margin-bottom: 22px; }
+  .strip.five { grid-template-columns: repeat(5, 1fr); }
+  .strip button { text-align: left; background: none; border: 0; border-right: 1px solid var(--line); padding: 14px 18px; cursor: pointer; }
+  .strip button:last-child { border-right: 0; }
+  .strip button:hover { background: var(--paper); }
+  .strip button[aria-pressed="true"] { background: var(--sky-bg); box-shadow: inset 0 -3px 0 var(--blue); }
+  .strip .n { font-family: var(--head); font-size: 30px; font-weight: 600; line-height: 1; display: block; }
+  .strip .l { font-size: 14px; color: var(--ink-soft); }
+  .toolbar { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .toolbar input { padding: 9px 12px; border: 1px solid var(--line); border-radius: 3px; background: var(--white); min-width: 260px; min-height: 40px; }
+  table.projects { width: 100%; border-collapse: collapse; background: var(--white); border: 1px solid var(--line); margin-bottom: 8px; }
+  table.projects th { text-align: left; font-weight: 600; font-size: 14px; color: var(--ink-soft); padding: 10px 14px; border-bottom: 2px solid var(--ink); }
+  table.projects td { padding: 12px 14px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+  table.projects tr.row { cursor: pointer; }
+  table.projects tr.row:hover td { background: var(--paper); }
+  table.projects select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--white); min-height: 34px; }
+  .pid { font-family: var(--head); font-weight: 600; font-size: 17px; }
+  .addr { font-weight: 600; }
+  .muted { color: var(--ink-soft); font-size: 14px; }
+  .empty { padding: 30px 20px; text-align: center; background: var(--white); border: 1px solid var(--line); border-top: 0; color: var(--ink-soft); }
+  .section-title { margin: 26px 0 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .section-title p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+
+  .chip { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .chip.Received { background: var(--slate-bg); color: #364a63; }
+  .chip.In-design { background: var(--sky-bg); color: var(--blue-dark); }
+  .chip.Needs-info { background: var(--amber-bg); color: var(--amber); }
+  .chip.Ready { background: var(--green-bg); color: var(--green); }
+  .src { display: inline-block; font-size: 13px; padding: 2px 9px; border: 1px solid var(--line); border-radius: 3px; background: var(--white); white-space: nowrap; }
+  .src.Client-portal { border-color: var(--blue); color: var(--blue-dark); background: var(--sky-bg); }
+  .src.Email, .src.Website-chat { border-style: dashed; color: var(--ink-soft); }
+
+  /* wizard and panels */
+  .steps { display: flex; margin-bottom: 26px; border: 1px solid var(--line); background: var(--white); }
+  .steps div { flex: 1; padding: 12px 16px; border-right: 1px solid var(--line); color: var(--ink-soft); font-size: 15px; }
+  .steps div:last-child { border-right: 0; }
+  .steps div.on { background: var(--ink); color: #fff; font-weight: 600; }
+  .steps div.done { color: var(--green); font-weight: 600; }
+  .panel { background: var(--white); border: 1px solid var(--line); padding: 26px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  .checks { display: flex; gap: 18px; flex-wrap: wrap; }
+  .checks label { display: flex; gap: 8px; align-items: center; font-weight: 500; }
+  .drop { border: 2px dashed var(--blue); background: var(--sky-bg); padding: 34px 20px; text-align: center; cursor: pointer; border-radius: 3px; }
+  .drop:hover { background: #d0e1f9; }
+  .drop strong { font-family: var(--head); font-size: 20px; display: block; margin-bottom: 4px; }
+  .filelist { list-style: none; padding: 0; margin: 16px 0 0; }
+  .filelist li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--grid); border-bottom: 0; background: var(--paper); }
+  .filelist li:last-child { border-bottom: 1px solid var(--grid); }
+  .actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .review-list { list-style: none; padding: 0; margin: 12px 0 18px; }
+  .review-list li { padding: 10px 12px; border-left: 4px solid var(--line); background: var(--paper); margin-bottom: 8px; }
+  .review-list li.ok { border-left-color: var(--green); }
+  .review-list li.miss { border-left-color: var(--amber); background: var(--amber-bg); }
+  .note { padding: 12px 14px; background: var(--sky-bg); border-left: 4px solid var(--blue); font-size: 15px; margin-bottom: 18px; }
+  .note.warn { background: var(--amber-bg); border-left-color: var(--amber); }
+
+  /* detail */
+  .crumb { margin-bottom: 14px; font-size: 15px; }
+  .titleblock { display: grid; grid-template-columns: 2.2fr 1fr 1fr 1fr; border: 2px solid var(--ink); background: var(--white); margin-bottom: 24px; }
+  .titleblock > div { padding: 12px 16px; border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); min-width: 0; }
+  .titleblock > div:nth-child(4n) { border-right: 0; }
+  .titleblock > div:nth-last-child(-n+4) { border-bottom: 0; }
+  .titleblock .k { font-size: 13px; color: var(--ink-soft); }
+  .titleblock .v { font-family: var(--head); font-size: 20px; font-weight: 600; overflow-wrap: anywhere; }
+  .titleblock .big { grid-row: span 2; display: flex; flex-direction: column; justify-content: center; }
+  .titleblock .big .v { font-size: 26px; }
+  .cols { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; align-items: start; }
+  .block { background: var(--white); border: 1px solid var(--line); padding: 20px 22px; margin-bottom: 24px; }
+  .block h3 { margin-bottom: 12px; }
+  .timeline { list-style: none; padding: 0; margin: 0; }
+  .timeline li { position: relative; padding: 0 0 18px 30px; color: var(--ink-soft); }
+  .timeline li:last-child { padding-bottom: 0; }
+  .timeline li::before { content: ""; position: absolute; left: 6px; top: 22px; bottom: -2px; width: 2px; background: var(--line); }
+  .timeline li:last-child::before { display: none; }
+  .timeline li::after { content: ""; position: absolute; left: 0; top: 4px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); background: var(--white); }
+  .timeline li.done { color: var(--ink); }
+  .timeline li.done::before { background: var(--green); }
+  .timeline li.done::after { background: var(--green); border-color: var(--green); }
+  .timeline li.now { color: var(--ink); font-weight: 600; }
+  .timeline li.now::after { border-color: var(--blue); background: var(--sky-bg); }
+  .timeline li.flag::after { border-color: var(--amber); background: var(--amber-bg); }
+  .timeline .when { display: block; font-weight: 400; font-size: 14px; color: var(--ink-soft); }
+  .loads { display: grid; grid-template-columns: repeat(2, 1fr); border: 1px solid var(--ink); }
+  .loads > div { padding: 12px 14px; border-right: 1px solid var(--grid); border-bottom: 1px solid var(--grid); }
+  .loads > div:nth-child(2n) { border-right: 0; }
+  .loads > div:nth-last-child(-n+2) { border-bottom: 0; }
+  .loads .k { font-size: 13px; color: var(--ink-soft); }
+  .loads .v { font-family: var(--head); font-size: 24px; font-weight: 600; }
+  .loads .u { font-size: 14px; font-weight: 400; color: var(--ink-soft); }
+  .docs { list-style: none; padding: 0; margin: 0; }
+  .docs li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--grid); }
+  .docs li:last-child { border-bottom: 0; }
+  .need { margin: 0 0 14px; padding-left: 20px; }
+  .thread { list-style: none; padding: 0; margin: 0 0 14px; }
+  .thread li { padding: 10px 12px; background: var(--paper); border-left: 4px solid var(--line); margin-bottom: 8px; }
+  .thread li.you { border-left-color: var(--blue); background: var(--sky-bg); }
+  .thread .by { font-size: 13px; color: var(--ink-soft); display: block; }
+  .log { list-style: none; padding: 0; margin: 0; font-size: 14px; }
+  .log li { padding: 7px 0; border-bottom: 1px solid var(--grid); display: flex; gap: 10px; }
+  .log li:last-child { border-bottom: 0; }
+  .log .d { color: var(--ink-soft); min-width: 86px; }
+
+  /* firm work screen */
+  .files { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .file { border: 1px solid var(--line); background: var(--paper); }
+  .file .thumb { height: 92px; background: repeating-linear-gradient(0deg, #e3ebf6 0 1px, transparent 1px 14px), repeating-linear-gradient(90deg, #e3ebf6 0 1px, transparent 1px 14px); display: flex; align-items: center; justify-content: center; color: var(--ink-soft); font-size: 13px; border-bottom: 1px solid var(--line); }
+  .file .nm { padding: 8px 10px; font-size: 14px; overflow-wrap: anywhere; }
+  .file button { margin: 0 10px 10px; }
+  table.takeoff { width: 100%; border-collapse: collapse; }
+  table.takeoff th { text-align: left; font-size: 14px; color: var(--ink-soft); font-weight: 600; padding: 8px 10px; border-bottom: 2px solid var(--ink); }
+  table.takeoff td { padding: 10px; border-bottom: 1px solid var(--grid); }
+  .conf { font-size: 13px; padding: 2px 8px; border-radius: 99px; }
+  .conf.High { background: var(--green-bg); color: var(--green); }
+  .conf.Medium { background: var(--sky-bg); color: var(--blue-dark); }
+  .conf.Low { background: var(--amber-bg); color: var(--amber); }
+  .askrow { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .askrow label { display: flex; gap: 8px; align-items: center; font-weight: 500; }
+  .divider { border: 0; border-top: 1px solid var(--grid); margin: 18px 0; }
+
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 3px; max-width: 90vw; box-shadow: 0 6px 24px rgba(20,40,63,.3); z-index: 10; }
+
+  @media (max-width: 900px) {
+    .login { grid-template-columns: 1fr; }
+    .login-art { padding: 32px 24px; }
+    .login-art h1 { font-size: 36px; }
+    .plan-svg { display: none; }
+    .cols { grid-template-columns: 1fr; }
+    .titleblock { grid-template-columns: 1fr 1fr; }
+    .titleblock > div { border-right: 1px solid var(--ink) !important; border-bottom: 1px solid var(--ink) !important; }
+    .titleblock > div:nth-child(2n) { border-right: 0 !important; }
+    .titleblock .big { grid-row: auto; grid-column: span 2; }
+    .strip, .strip.five { grid-template-columns: repeat(2, 1fr); }
+    .strip button { border-bottom: 1px solid var(--line); }
+    .two { grid-template-columns: 1fr; }
+    .steps div { padding: 10px 8px; font-size: 13px; }
+    .page { padding: 22px 16px 56px; }
+    .demobar { padding: 8px 16px; }
+    .storybar { padding: 12px 16px; }
+    .story { grid-template-columns: 1fr; }
+    table.projects .hide-sm { display: none; }
+    .toolbar input { min-width: 0; width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+/* Prototype only: fake data, in-memory state, no real authentication.
+   Client view and design-team views read and write the same PROJECTS list. */
+
+var FIRM = "Meridian Load Design";
+var TENANTS = {
+  sunbelt: { company: "Sunbelt Air Co.", user: "Maria Reyes", email: "maria@sunbeltair.example" },
+  coastal: { company: "Coastal Comfort HVAC", user: "Dan Whitfield", email: "dan@coastalcomfort.example" }
+};
+var STAFF = {
+  lead:      { name: "Priya Nair", role: "Design lead", short: "Design lead", email: "lead@meridianload.example" },
+  designer1: { name: "Alex Tan",   role: "Designer",    short: "Designer 1", email: "designer1@meridianload.example" },
+  designer2: { name: "Sam Ortiz",  role: "Designer",    short: "Designer 2", email: "designer2@meridianload.example" }
+};
+var TODAY = "Oct 10, 2026";
+var DESIGN_RES = { indoor: "75 F / 50% RH", outdoor: "92 F summer, 38 F winter" };
+
+var PROJECTS = [
+  { id: "P-1054", client: "sunbelt", address: "73 Ibis Court", city: "Port St. Lucie, FL", type: "New construction", scope: ["Manual J","Manual S","Manual D"], status: "Received", submitted: "Oct 10, 2026", sqft: 2240, beds: "4", door: "East", source: "Email", assignee: null,
+    files: ["Ibis-ct-plans-FINAL(2).pdf", "Ibis-ct-elevations.pdf"], missing: [], thread: [], confirmed: {}, log: [ { when: "Oct 10", text: "Arrived as an email attachment. Filed to Sunbelt Air Co." } ] },
+  { id: "P-1053", client: "coastal", address: "301 Seagrape Road", city: "Vero Beach, FL", type: "Replacement", scope: ["Manual J","Manual S"], status: "Received", submitted: "Oct 10, 2026", sqft: 1580, beds: "3", door: "", source: "Website chat", assignee: null,
+    files: ["floorplan-photo.jpg"], missing: [], thread: [], confirmed: {}, log: [ { when: "Oct 10", text: "Arrived through the website chat. Filed to Coastal Comfort HVAC." } ] },
+  { id: "P-1051", client: "sunbelt", address: "1805 Bayshore Blvd", city: "Port St. Lucie, FL", type: "New construction", scope: ["Manual J","Manual S","Manual D"], status: "Needs info", submitted: "Oct 8, 2026", sqft: 2480, beds: "4", door: "", source: "Client portal", assignee: "designer1",
+    files: ["A101-floor-plan.pdf", "A201-elevations.pdf"], missing: ["Window schedule is not in the uploaded plans", "Front door orientation is not stated"], thread: [], confirmed: {},
+    log: [ { when: "Oct 8", text: "Sent through the client portal." }, { when: "Oct 9", text: "Designer 1 asked the client for two items." } ] },
+  { id: "P-1049", client: "coastal", address: "560 Anchor Way", city: "Vero Beach, FL", type: "New construction", scope: ["Manual J","Manual S","Manual D"], status: "In design", submitted: "Oct 8, 2026", sqft: 3050, beds: "5", door: "South", source: "Client portal", assignee: "designer1",
+    files: ["Anchor-way-set.pdf", "Anchor-way-windows.pdf"], missing: [], thread: [], confirmed: {}, log: [ { when: "Oct 8", text: "Sent through the client portal." }, { when: "Oct 9", text: "Assigned to Designer 1." } ] },
+  { id: "P-1047", client: "sunbelt", address: "92 Heron Cove", city: "Stuart, FL", type: "Replacement", scope: ["Manual J","Manual S"], status: "In design", submitted: "Oct 7, 2026", sqft: 1760, beds: "3", door: "North", source: "Email", assignee: "designer2",
+    files: ["heron-cove.pdf"], missing: [], thread: [], confirmed: {}, log: [ { when: "Oct 7", text: "Arrived as an email attachment. Filed to Sunbelt Air Co." }, { when: "Oct 8", text: "Assigned to Designer 2." } ] },
+  { id: "P-1042", client: "sunbelt", address: "418 Palmetto Lane", city: "Port St. Lucie, FL", type: "New construction", scope: ["Manual J","Manual S","Manual D"], status: "Ready", submitted: "Oct 2, 2026", sqft: 2150, beds: "4", door: "South", source: "Client portal", assignee: "designer1",
+    files: ["palmetto-plans.pdf", "palmetto-windows.pdf"], missing: [], confirmed: { all: true },
+    results: { cooling: 28400, heating: 14200, tons: 2.4, cfm: 960, sensible: 0.76, indoor: DESIGN_RES.indoor, outdoor: DESIGN_RES.outdoor },
+    thread: [ { by: "Design team", text: "Report delivered. Let us know if the equipment selection changes before permit." } ], log: [ { when: "Oct 2", text: "Sent through the client portal." }, { when: "Oct 6", text: "Marked ready by Designer 1." } ] },
+  { id: "P-1038", client: "sunbelt", address: "27 Marlin Drive", city: "Jensen Beach, FL", type: "Replacement", scope: ["Manual J"], status: "Ready", submitted: "Sep 28, 2026", sqft: 1340, beds: "3", door: "West", source: "Client portal", assignee: "designer2",
+    files: ["marlin-plan.pdf"], missing: [], confirmed: { all: true },
+    results: { cooling: 21600, heating: 9800, tons: 1.8, cfm: 720, sensible: 0.78, indoor: DESIGN_RES.indoor, outdoor: DESIGN_RES.outdoor },
+    thread: [], log: [ { when: "Sep 28", text: "Sent through the client portal." }, { when: "Oct 1", text: "Marked ready by Designer 2." } ] },
+  { id: "P-1033", client: "coastal", address: "14 Dune Crest Court", city: "Fort Pierce, FL", type: "Replacement", scope: ["Manual J","Manual S"], status: "Ready", submitted: "Sep 25, 2026", sqft: 1920, beds: "3", door: "South", source: "Email", assignee: "designer2",
+    files: ["dune-crest.pdf"], missing: [], confirmed: { all: true },
+    results: { cooling: 31200, heating: 15600, tons: 2.6, cfm: 1040, sensible: 0.74, indoor: DESIGN_RES.indoor, outdoor: DESIGN_RES.outdoor },
+    thread: [], log: [ { when: "Sep 25", text: "Arrived as an email attachment." }, { when: "Sep 29", text: "Marked ready by Designer 2." } ] }
+];
+var nextNum = 1055;
+var INITIAL = JSON.stringify(PROJECTS);
+var REGISTERED = [
+  { email: "maria@sunbeltair.example", name: "Maria Reyes", kind: "tenant", key: "sunbelt" },
+  { email: "dan@coastalcomfort.example", name: "Dan Whitfield", kind: "tenant", key: "coastal" },
+  { email: "lead@meridianload.example", name: "Priya Nair", kind: "staff", key: "lead" },
+  { email: "designer1@meridianload.example", name: "Alex Tan", kind: "staff", key: "designer1" },
+  { email: "designer2@meridianload.example", name: "Sam Ortiz", kind: "staff", key: "designer2" }
+];
+var INITIAL_REG = JSON.stringify(REGISTERED);
+
+var state = { view: "login", tenant: null, staff: null, projectId: null, filter: "All", query: "", step: 1, draft: null, error: "", story: "A", storyProject: null, picker: false, userName: null, toolsOpen: true };
+
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function cls(s) { return String(s).replace(/ /g, "-"); }
+function fmt(n) { return isNaN(Number(n)) ? String(n) : Number(n).toLocaleString(); }
+function find(id) { return PROJECTS.filter(function (p) { return p.id === id; })[0]; }
+function clientProjects() { return PROJECTS.filter(function (p) { return p.client === state.tenant; }); }
+function addLog(p, text) { p.log.push({ when: TODAY.replace(", 2026", ""), text: text }); }
+function whoAmI() { return state.staff ? STAFF[state.staff].short : "Client"; }
+function toast(msg) {
+  var t = document.getElementById("toast");
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function () { t.hidden = true; }, 3200);
+}
+function go(view, extra) {
+  state.view = view;
+  if (extra) { for (var k in extra) state[k] = extra[k]; }
+  render(); window.scrollTo(0, 0);
+}
+function switchTo(who, keepStory, userName) {
+  if (!keepStory) state.story = "X";
+  state.userName = userName || null; state.picker = false;
+  state.filter = "All"; state.query = ""; state.projectId = null; state.error = "";
+  if (TENANTS[who]) { state.tenant = who; state.staff = null; go("dashboard"); }
+  else { state.staff = who; state.tenant = null; go("fdash"); }
+}
+
+/* ---------- login ---------- */
+function planSvg() {
+  return '<svg class="plan-svg" viewBox="0 0 520 300" role="img" aria-label="Sketch of a floor plan with dimension lines">' +
+    '<g fill="none" stroke="#8fb4ee" stroke-width="2"><rect x="40" y="30" width="440" height="220"/>' +
+    '<line x1="250" y1="30" x2="250" y2="170"/><line x1="250" y1="170" x2="480" y2="170"/>' +
+    '<line x1="40" y1="130" x2="150" y2="130"/><line x1="150" y1="130" x2="150" y2="250"/>' +
+    '<path d="M150 190 A26 26 0 0 1 176 164" stroke-width="1.5"/><line x1="150" y1="190" x2="150" y2="164" stroke-width="1.5"/></g>' +
+    '<g stroke="#c4d3ea" stroke-width="1" fill="#c4d3ea" font-family="Barlow Semi Condensed, Arial Narrow, sans-serif" font-size="14">' +
+    '<line x1="40" y1="276" x2="480" y2="276"/><line x1="40" y1="268" x2="40" y2="284"/><line x1="480" y1="268" x2="480" y2="284"/>' +
+    '<text x="238" y="270" stroke="none">44 ft 0 in</text>' +
+    '<line x1="504" y1="30" x2="504" y2="250"/><line x1="496" y1="30" x2="512" y2="30"/><line x1="496" y1="250" x2="512" y2="250"/>' +
+    '<text x="140" y="90" stroke="none">Living</text><text x="340" y="105" stroke="none">Kitchen</text><text x="70" y="195" stroke="none">Bed 2</text><text x="330" y="215" stroke="none">Primary</text></g></svg>';
+}
+function acctBtn(email, name) {
+  return '<button type="button" class="acct" onclick="googleSignIn(\'' + email + '\')"><span class="av">' + esc(name.charAt(0)) + '</span>' +
+    '<span class="who2"><strong>' + esc(name) + '</strong><span class="muted">' + esc(email) + '</span></span></button>';
+}
+function pickerHtml() {
+  if (!state.picker) return "";
+  return '<div class="modal-back" onclick="closePicker()"><div class="modal" role="dialog" aria-modal="true" aria-label="Choose an account" onclick="event.stopPropagation()">' +
+    '<h3>Choose an account</h3><p class="muted" style="margin:4px 0 12px">Simulated picker for this prototype. Real sign-in would open Google\'s own page.</p>' +
+    '<div class="acct-list">' + acctBtn("maria@sunbeltair.example", "Maria Reyes") + acctBtn("dan@coastalcomfort.example", "Dan Whitfield") + acctBtn("alex.guest@gmail.com", "Alex Guest") + '</div>' +
+    '<details style="margin-top:12px"><summary class="muted" style="cursor:pointer">Design team accounts</summary><div class="acct-list" style="margin-top:8px">' +
+      acctBtn("lead@meridianload.example", "Priya Nair") + acctBtn("designer1@meridianload.example", "Alex Tan") + acctBtn("designer2@meridianload.example", "Sam Ortiz") + '</div></details>' +
+    '<div class="field" style="margin:14px 0 8px"><label for="g-other">Use another account</label><input id="g-other" type="email" placeholder="name@company.com"></div>' +
+    '<div class="actions" style="margin-top:8px"><button class="btn ghost small" onclick="closePicker()">Cancel</button><button class="btn small" onclick="googleOther()">Continue</button></div></div></div>';
+}
+function viewLogin() {
+  return storyBar() + '<div class="login' + (state.story ? ' withbar' : '') + '"><section class="login-art">' +
+    '<div><div class="brand">Load<span>Desk</span></div>' +
+    '<h1>Plans in. Load calcs back.</h1>' +
+    '<p>One front door for every plan set, one queue for the design team, and one place for clients to get their reports.</p>' + planSvg() + '</div>' +
+    '<div class="art-note">Concept prototype. Sample data only. Names are made up and not affiliated with any real company.</div></section>' +
+    '<section class="login-form-wrap"><div class="login-form">' +
+    '<h2>Sign in</h2><p class="sub">Use the Google account your company registered with us.</p>' +
+    (state.error ? '<div class="error" role="alert">' + esc(state.error) + '</div>' : '') +
+    '<button type="button" class="gbtn" onclick="openPicker()"><span class="g" aria-hidden="true">G</span> Continue with Google</button>' +
+    '<div class="note" style="margin-top:18px">Only pre-registered email addresses can sign in. If yours is not on the list, ask the design lead to add it.</div>' +
+    '</div></section></div>' + pickerHtml();
+}
+function openPicker() { state.picker = true; state.error = ""; render(); }
+function closePicker() { state.picker = false; render(); }
+function googleOther() { googleSignIn(document.getElementById("g-other").value); }
+function googleSignIn(email) {
+  email = String(email || "").trim().toLowerCase();
+  state.picker = false;
+  if (!email || email.indexOf("@") < 1) { state.error = "Enter a full email address."; render(); return; }
+  var r = REGISTERED.filter(function (x) { return x.email === email; })[0];
+  if (!r) { state.error = email + " is not registered. Ask your design lead to add this email, then try again."; render(); return; }
+  state.error = "";
+  switchTo(r.key, r.kind === "tenant", r.name);
+}
+function registerEmail() {
+  var email = document.getElementById("reg-email").value.trim().toLowerCase();
+  var key = document.getElementById("reg-client").value;
+  if (!email || email.indexOf("@") < 1) { toast("Enter a full email address."); return; }
+  if (REGISTERED.filter(function (x) { return x.email === email; }).length) { toast(email + " is already registered."); return; }
+  var name = email.split("@")[0].replace(/[._]+/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  REGISTERED.push({ email: email, name: name, kind: "tenant", key: key });
+  toast(email + " can now sign in to " + TENANTS[key].company + ".");
+  render();
+}
+function signOut() { state.tenant = null; state.staff = null; state.projectId = null; state.error = ""; state.userName = null; go("login"); }
+
+/* ---------- story mode ---------- */
+function storyKey() {
+  var st = state.story;
+  if (!st) return null;
+  if (st === "X") return "X";
+  if (st === "A") {
+    if (state.view === "login") return "A1";
+    if (state.view === "new") return "A" + (state.step + 2);
+    return "A2";
+  }
+  if (st === "B3") return st;
+  if (state.view === "project" && state.tenant && state.projectId === state.storyProject) return st;
+  return "Bx";
+}
+function storyInfo(key) {
+  var t = state.tenant ? TENANTS[state.tenant] : null;
+  if (key === "X") {
+    var who = state.staff ? STAFF[state.staff].short + ", " + STAFF[state.staff].name : (t ? t.company : null);
+    return { tag: "Story", title: "Exploring on your own", n: 0, of: 0,
+      text: who ? "Viewing as " + who + ". The guided story is paused. Replay it from the login screen, or use Demo tools to switch view."
+                : "The guided story is paused. Sign in with any registered account to look around, or replay the story.",
+      action: '<button class="btn small" onclick="replay()">Replay story</button>' };
+  }
+  if (key.charAt(0) === "A") {
+    var n = Number(key.charAt(1));
+    var text = {
+      1: "Sunbelt Air Co. opens the portal. Click Continue with Google and pick the Sunbelt account.",
+      2: "Signed in as " + (t ? (state.userName || t.user) + " at " + t.company : "the client") + ". Everything sent to the design team is listed here with its status. Start a new project.",
+      3: "Enter the project details. The portal only asks for what a load calculation needs.",
+      4: "Add the plan files. Click the box to add sample files. Two or more covers the window schedule.",
+      5: "Before anything is sent, the portal checks for missing items. Amber lines would hold the project up. Send it to the design team."
+    }[n];
+    return { tag: "Story A", title: "Client sends a project", n: n, of: 5, text: text, action: "" };
+  }
+  var p = state.storyProject ? find(state.storyProject) : null;
+  var base = { tag: "Story B", title: "Client gets it", of: 3, n: 1, action: "" };
+  if (key === "B1") {
+    base.n = 1;
+    if (p && p.status === "Needs info") {
+      base.text = "The project is in. The portal already caught missing items, so the status reads Needs info. Answer what is listed under What we need from you.";
+    } else {
+      base.text = "The project is in. Status and the timeline show where it stands, so the client never has to ask. Next, time passes.";
+      base.action = '<button class="btn small" onclick="fastForward()">Fast-forward a day</button>';
+    }
+  } else if (key === "B2") {
+    base.n = 2;
+    base.text = "A day later the design team has a question. It shows as Needs info, the question is in Messages, and what is needed sits at the top. Answer it.";
+  } else if (key === "B3") {
+    base.n = 3;
+    base.text = "Answered. The project is back in design and the design team sees the answer in their queue. No email thread, no phone tag. That is the end of the client story. Replay it from the login screen, or explore freely.";
+    base.action = '<button class="btn small" onclick="replay()">Replay story</button><button class="btn small ghost" onclick="endStory()">Explore freely</button>';
+  } else {
+    base.n = 1;
+    if (p && state.tenant === p.client) {
+      base.text = "Open the project you just sent to continue.";
+      base.action = '<button class="btn small" onclick="openProject(\'' + p.id + '\')">Open the project</button>';
+    } else {
+      base.text = "Sign in as " + (p ? TENANTS[p.client].company : "the same client") + ", then open the project you just sent.";
+    }
+  }
+  return base;
+}
+function storyBar() {
+  var key = storyKey();
+  if (!key) return "";
+  var i = storyInfo(key), dots = "", k;
+  for (k = 1; k <= i.of; k++) dots += '<span class="dot' + (k < i.n ? " done" : (k === i.n ? " now" : "")) + '"></span>';
+  return '<div class="storybar" role="region" aria-label="Story guide"><div class="sb-head"><strong>' + i.tag + ': ' + i.title + '</strong>' +
+    (i.of ? '<span class="dots" aria-hidden="true">' + dots + '</span><span class="muted">Step ' + i.n + ' of ' + i.of + '</span>' : '') + '</div>' +
+    '<div class="sb-body"><p>' + esc(i.text) + '</p>' + (i.action ? '<div class="sb-actions">' + i.action + '</div>' : '') + '</div></div>';
+}
+function toolsBar() {
+  function pb(key, label) {
+    var on = (state.tenant === key) || (state.staff === key);
+    return '<button class="pbtn" aria-pressed="' + on + '" onclick="switchTo(\'' + key + '\')">' + label + '</button>';
+  }
+  return '<div class="demobar"><details' + (state.toolsOpen ? ' open' : '') + ' ontoggle="state.toolsOpen = this.open"><summary>Demo tools (sample data, nothing is saved)</summary><div class="row" style="margin-top:8px">' +
+    '<span class="lbl">View as</span>' + pb("sunbelt", "Client: Sunbelt") + pb("coastal", "Client: Coastal") + '<span class="sep"></span>' +
+    pb("lead", "Design lead") + pb("designer1", "Designer 1") + pb("designer2", "Designer 2") + '<span class="sep"></span>' +
+    '<button class="pbtn" onclick="replay()">Replay story</button></div>' +
+    '<p>Switching view pauses the guided story. Replay story starts again from the login screen.</p></details></div>';
+}
+
+/* ---------- shell ---------- */
+function shell(inner) {
+  var who;
+  if (state.staff) {
+    var s = STAFF[state.staff];
+    who = '<span class="tenant">' + esc(FIRM) + '</span><span class="role-tag">' + esc(s.short) + '</span><span>' + esc(s.name) + '</span>';
+  } else {
+    var t = TENANTS[state.tenant];
+    who = '<span class="tenant">' + esc(t.company) + '</span><span>' + esc(state.userName || t.user) + '</span>';
+  }
+  return '<header class="topbar"><div class="brand">Load<span>Desk</span></div><div class="who">' + who +
+    '<button class="linkbtn" onclick="signOut()">Sign out</button></div></header>' + storyBar() + toolsBar() + '<main class="page">' + inner + '</main>';
+}
+
+/* ---------- client: dashboard ---------- */
+function clientCounts() {
+  var c = { All: 0, "Needs info": 0, "In design": 0, Ready: 0 };
+  clientProjects().forEach(function (p) {
+    c.All++;
+    if (p.status === "Needs info") c["Needs info"]++;
+    else if (p.status === "Ready") c.Ready++;
+    else c["In design"]++;
+  });
+  return c;
+}
+function clientMatch(p) {
+  if (state.filter === "All") return true;
+  if (state.filter === "In design") return p.status === "In design" || p.status === "Received";
+  return p.status === state.filter;
+}
+function clientRows() {
+  var q = state.query.trim().toLowerCase();
+  var list = clientProjects().filter(function (p) { return clientMatch(p) && (!q || (p.address + " " + p.city + " " + p.id).toLowerCase().indexOf(q) !== -1); });
+  if (!list.length) return '<tr><td colspan="5" class="empty">No projects match. Clear the search or pick another status.</td></tr>';
+  return list.map(function (p) {
+    return '<tr class="row" tabindex="0" onclick="openProject(\'' + p.id + '\')" onkeydown="if(event.key===\'Enter\')openProject(\'' + p.id + '\')">' +
+      '<td><span class="pid">' + p.id + '</span></td>' +
+      '<td><div class="addr">' + esc(p.address) + '</div><div class="muted">' + esc(p.city) + '</div></td>' +
+      '<td class="hide-sm">' + esc(p.scope.map(function (s) { return s.replace("Manual ", ""); }).join(", ")) + '<div class="muted">' + esc(p.type) + '</div></td>' +
+      '<td class="hide-sm">' + esc(p.submitted) + '</td>' +
+      '<td><span class="chip ' + cls(p.status) + '">' + esc(p.status) + '</span></td></tr>';
+  }).join("");
+}
+function viewDashboard() {
+  var c = clientCounts();
+  function stat(key, label) { return '<button aria-pressed="' + (state.filter === key) + '" onclick="setFilter(\'' + key + '\')"><span class="n">' + c[key] + '</span><span class="l">' + label + '</span></button>'; }
+  return shell('<div class="page-head"><div><h1>Projects</h1><p>Everything you have sent to the design team.</p></div><button class="btn" onclick="startNew()">New project</button></div>' +
+    '<div class="strip">' + stat("All", "All projects") + stat("Needs info", "Need your input") + stat("In design", "In design") + stat("Ready", "Ready to download") + '</div>' +
+    '<div class="toolbar"><input id="search" type="search" placeholder="Search by address or project number" value="' + esc(state.query) + '" oninput="setQuery(this.value)" aria-label="Search projects"></div>' +
+    '<table class="projects"><thead><tr><th>No.</th><th>Address</th><th class="hide-sm">Scope</th><th class="hide-sm">Sent</th><th>Status</th></tr></thead><tbody id="rows">' + clientRows() + '</tbody></table>');
+}
+function setFilter(f) { state.filter = f; render(); }
+function setQuery(v) { state.query = v; document.getElementById("rows").innerHTML = clientRows(); }
+function openProject(id) { go("project", { projectId: id }); }
+
+/* ---------- client: new project ---------- */
+function startNew() {
+  state.draft = { address: "", city: "", type: "New construction", sqft: "", beds: "", door: "", scope: { J: true, S: true, D: true }, files: [] };
+  state.step = 1; go("new");
+}
+function viewNew() {
+  var d = state.draft, s = state.step;
+  function stepCls(n) { return s === n ? "on" : (s > n ? "done" : ""); }
+  var head = '<div class="crumb"><button class="linkbtn" onclick="go(\'dashboard\')">Back to projects</button></div><div class="page-head"><div><h1>New project</h1></div></div>' +
+    '<div class="steps"><div class="' + stepCls(1) + '">1. Project details</div><div class="' + stepCls(2) + '">2. Upload plans</div><div class="' + stepCls(3) + '">3. Review and send</div></div>';
+  var body = "";
+  if (s === 1) {
+    body = '<div class="panel"><h2 style="margin-bottom:18px">Project details</h2>' +
+      '<div class="two"><div class="field"><label for="f-address">Street address</label><input id="f-address" value="' + esc(d.address) + '" oninput="state.draft.address=this.value"></div>' +
+      '<div class="field"><label for="f-city">City and state</label><input id="f-city" value="' + esc(d.city) + '" oninput="state.draft.city=this.value" placeholder="Port St. Lucie, FL"></div></div>' +
+      '<div class="two"><div class="field"><label for="f-type">Project type</label><select id="f-type" onchange="state.draft.type=this.value">' +
+        ['New construction','Replacement','Addition'].map(function (o) { return '<option' + (d.type === o ? ' selected' : '') + '>' + o + '</option>'; }).join("") + '</select></div>' +
+      '<div class="field"><label for="f-sqft">Conditioned area (sq ft)</label><input id="f-sqft" inputmode="numeric" value="' + esc(d.sqft) + '" oninput="state.draft.sqft=this.value"></div></div>' +
+      '<div class="two"><div class="field"><label for="f-beds">Bedrooms</label><input id="f-beds" inputmode="numeric" value="' + esc(d.beds) + '" oninput="state.draft.beds=this.value"><span class="hint">Used for occupancy in the load calculation.</span></div>' +
+      '<div class="field"><label for="f-door">Front door faces</label><select id="f-door" onchange="state.draft.door=this.value">' +
+        ['','North','East','South','West'].map(function (o) { return '<option value="' + o + '"' + (d.door === o ? ' selected' : '') + '>' + (o || 'Not sure') + '</option>'; }).join("") + '</select></div></div>' +
+      '<div class="field"><label>Reports needed</label><div class="checks">' +
+        [['J','Manual J (load)'],['S','Manual S (equipment)'],['D','Manual D (duct)']].map(function (x) {
+          return '<label><input type="checkbox"' + (d.scope[x[0]] ? ' checked' : '') + ' onchange="state.draft.scope.' + x[0] + '=this.checked"> ' + x[1] + '</label>'; }).join("") + '</div></div>' +
+      '<div class="actions"><span></span><button class="btn" onclick="nextStep()">Continue to plans</button></div></div>';
+  } else if (s === 2) {
+    body = '<div class="panel"><h2 style="margin-bottom:6px">Upload plans</h2><p class="muted" style="margin:0 0 16px">PDF or DWG. Floor plans, elevations and the window schedule give the fastest turnaround.</p>' +
+      '<div class="drop" role="button" tabindex="0" onclick="addSampleFile()" onkeydown="if(event.key===\'Enter\')addSampleFile()"><strong>Add plan files</strong>Click to add a sample file. No real upload happens in this prototype.</div>' +
+      (d.files.length ? '<ul class="filelist">' + d.files.map(function (f, i) { return '<li><span>' + esc(f) + '</span><button class="linkbtn" onclick="removeFile(' + i + ')">Remove</button></li>'; }).join("") + '</ul>' : '') +
+      '<div class="actions"><button class="btn ghost" onclick="prevStep()">Back</button><button class="btn" onclick="nextStep()">Continue to review</button></div></div>';
+  } else {
+    var checks = [
+      [!!d.address.trim(), "Street address", "Add the street address"],
+      [!!d.sqft.trim(), "Conditioned area", "Add the conditioned area"],
+      [!!d.beds.trim(), "Bedroom count", "Add the bedroom count"],
+      [!!d.door, "Front door orientation", "Say which way the front door faces, or the report will be held for input"],
+      [d.files.length > 0, "Plan files uploaded", "Upload at least one plan file"],
+      [d.files.length > 1, "Window schedule or elevations", "No window schedule detected. Add elevations or a window schedule"]
+    ];
+    var missing = checks.filter(function (c) { return !c[0]; });
+    body = '<div class="panel"><h2 style="margin-bottom:6px">Review and send</h2>' +
+      '<div class="note">Before this goes to the design team, the portal checks that the basics are there. Items marked below are the ones most likely to hold a project up.</div>' +
+      '<ul class="review-list">' + checks.map(function (c) { return '<li class="' + (c[0] ? 'ok' : 'miss') + '">' + (c[0] ? esc(c[1]) + ' provided' : esc(c[2])) + '</li>'; }).join("") + '</ul>' +
+      (missing.length ? '<p class="muted">You can still send it. It will show as Needs info until the missing items are added.</p>' : '<p class="muted">Everything needed is in. This goes straight into the design queue.</p>') +
+      '<div class="actions"><button class="btn ghost" onclick="prevStep()">Back</button><button class="btn" onclick="submitProject()">Send to design team</button></div></div>';
+  }
+  return shell(head + body);
+}
+function nextStep() {
+  if (state.step === 1 && !state.draft.address.trim()) { toast("Enter a street address to continue."); document.getElementById("f-address").focus(); return; }
+  state.step++; render();
+}
+function prevStep() { state.step--; render(); }
+function addSampleFile() {
+  var names = ["A101-floor-plan.pdf", "A201-elevations.pdf", "A301-window-schedule.pdf"];
+  var n = state.draft.files.length;
+  if (n >= names.length) { toast("Sample files already added."); return; }
+  state.draft.files.push(names[n]); render();
+}
+function removeFile(i) { state.draft.files.splice(i, 1); render(); }
+function submitProject() {
+  var d = state.draft, miss = [];
+  if (!d.sqft.trim()) miss.push("Conditioned area is missing");
+  if (!d.beds.trim()) miss.push("Bedroom count is missing");
+  if (!d.door) miss.push("Front door orientation is not stated");
+  if (d.files.length < 2) miss.push("Window schedule is not in the uploaded plans");
+  var scope = [];
+  if (d.scope.J) scope.push("Manual J");
+  if (d.scope.S) scope.push("Manual S");
+  if (d.scope.D) scope.push("Manual D");
+  if (!scope.length) scope.push("Manual J");
+  var p = { id: "P-" + (nextNum++), client: state.tenant, address: d.address.trim(), city: d.city.trim() || "Florida", type: d.type, scope: scope,
+    status: miss.length ? "Needs info" : "Received", submitted: TODAY, sqft: d.sqft || "Not given", beds: d.beds, door: d.door, source: "Client portal", assignee: null,
+    files: d.files.slice(), missing: miss, thread: [], confirmed: {}, log: [] };
+  addLog(p, "Sent through the client portal." + (miss.length ? " Portal check found " + miss.length + " missing item" + (miss.length > 1 ? "s" : "") + "." : ""));
+  PROJECTS.unshift(p);
+  if (state.story === "A") { state.story = "B1"; state.storyProject = p.id; }
+  toast("Project " + p.id + " sent to the design team.");
+  go("project", { projectId: p.id });
+}
+
+/* ---------- client: project detail ---------- */
+function stages(p) {
+  var order = ["Received", "In design", "Quality review", "Ready"];
+  var idx = { "Received": 0, "In design": 1, "Needs info": 1, "Ready": 3 }[p.status];
+  return order.map(function (name, i) {
+    var c = "";
+    if (p.status === "Ready") c = "done";
+    else if (i < idx) c = "done";
+    else if (i === idx) c = p.status === "Needs info" ? "now flag" : "now";
+    var note = "";
+    if (i === 0) note = p.submitted;
+    if (i === 1 && p.status === "Needs info") note = "Paused. Waiting on your input";
+    return '<li class="' + c + '">' + name + (note ? '<span class="when">' + esc(note) + '</span>' : '') + '</li>';
+  }).join("");
+}
+function resultsBlock(p, withNote) {
+  var r = p.results;
+  return '<section class="block"><h3>Load calculation results</h3><div class="loads">' +
+    '<div><div class="k">Total cooling load</div><div class="v">' + fmt(r.cooling) + ' <span class="u">BTU/h</span></div></div>' +
+    '<div><div class="k">Total heating load</div><div class="v">' + fmt(r.heating) + ' <span class="u">BTU/h</span></div></div>' +
+    '<div><div class="k">Cooling capacity</div><div class="v">' + r.tons.toFixed(1) + ' <span class="u">tons</span></div></div>' +
+    '<div><div class="k">Design airflow</div><div class="v">' + r.cfm + ' <span class="u">CFM</span></div></div>' +
+    '<div><div class="k">Sensible heat ratio</div><div class="v">' + r.sensible.toFixed(2) + '</div></div>' +
+    '<div><div class="k">Indoor design</div><div class="v" style="font-size:20px">' + esc(r.indoor) + '</div></div></div>' +
+    '<p class="muted" style="margin:10px 0 0">Outdoor design: ' + esc(r.outdoor) + '. Sample numbers for illustration only.</p></section>';
+}
+function viewProject() {
+  var p = find(state.projectId), left = "", right = "";
+  if (p.status === "Needs info") {
+    left += '<section class="block"><h3>What we need from you</h3><ul class="need">' + p.missing.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join("") +
+      '</ul><button class="btn" onclick="provideInfo(\'' + p.id + '\')">Send what\'s missing</button></section>';
+  }
+  if (p.status === "Ready" && p.results) left += resultsBlock(p);
+  left += '<section class="block"><h3>Progress</h3><ul class="timeline">' + stages(p) + '</ul></section>';
+  if (p.status === "Ready") {
+    right += '<section class="block"><h3>Documents</h3><ul class="docs">' +
+      p.scope.map(function (s) { return '<li><span>' + esc(s) + ' report (PDF)</span><button class="btn small ghost" onclick="toast(\'Prototype: downloads are not connected.\')">Download</button></li>'; }).join("") +
+      '<li><span>Calculation summary sheet</span><button class="btn small ghost" onclick="toast(\'Prototype: downloads are not connected.\')">Download</button></li></ul></section>';
+  } else {
+    right += '<section class="block"><h3>Documents</h3><p class="muted" style="margin:0">Reports appear here when the design team marks the project ready.</p></section>';
+  }
+  right += '<section class="block"><h3>Messages</h3>' +
+    (p.thread.length ? '<ul class="thread">' + p.thread.map(function (m) { return '<li class="' + (m.by === "You" ? "you" : "") + '"><span class="by">' + esc(m.by) + '</span>' + esc(m.text) + '</li>'; }).join("") + '</ul>' : '<p class="muted" style="margin:0 0 12px">No messages yet.</p>') +
+    '<div class="field"><label for="msg">' + (p.status === "Ready" ? "Request a revision" : "Message the design team") + '</label><textarea id="msg" placeholder="Equipment changed, window upgrade, new plan sheet..."></textarea></div>' +
+    '<button class="btn small" onclick="sendMsg(\'' + p.id + '\')">Send message</button></section>';
+  return shell('<div class="crumb"><button class="linkbtn" onclick="go(\'dashboard\')">Back to projects</button></div>' +
+    '<div class="titleblock">' +
+      '<div class="big"><div class="k">Project address</div><div class="v">' + esc(p.address) + '</div><div class="muted">' + esc(p.city) + '</div></div>' +
+      '<div><div class="k">Project no.</div><div class="v">' + p.id + '</div></div>' +
+      '<div><div class="k">Type</div><div class="v">' + esc(p.type) + '</div></div>' +
+      '<div><div class="k">Status</div><div class="v"><span class="chip ' + cls(p.status) + '">' + esc(p.status) + '</span></div></div>' +
+      '<div><div class="k">Reports</div><div class="v">' + esc(p.scope.map(function (s) { return s.replace("Manual ", ""); }).join(" / ")) + '</div></div>' +
+      '<div><div class="k">Area</div><div class="v">' + esc(isNaN(Number(p.sqft)) ? p.sqft : fmt(p.sqft) + " sq ft") + '</div></div>' +
+      '<div><div class="k">Sent</div><div class="v">' + esc(p.submitted) + '</div></div></div>' +
+    '<div class="cols"><div>' + left + '</div><div>' + right + '</div></div>');
+}
+function provideInfo(id) {
+  var p = find(id);
+  if (p.files.length < 2 && p.missing.join(" ").toLowerCase().indexOf("window") !== -1) p.files.push("A301-window-schedule.pdf");
+  p.status = "In design"; p.missing = [];
+  p.thread.push({ by: "You", text: "Sent the requested information." });
+  addLog(p, "Client supplied the missing items. Back in the designer's queue.");
+  if (state.story === "B1" || state.story === "B2") state.story = "B3";
+  toast("Thanks. " + id + " is back in design.");
+  render();
+}
+function sendMsg(id) {
+  var box = document.getElementById("msg"), text = box.value.trim();
+  if (!text) { toast("Write a message first."); box.focus(); return; }
+  var p = find(id);
+  p.thread.push({ by: "You", text: text });
+  addLog(p, "Client sent a message.");
+  toast("Message sent.");
+  render();
+}
+
+/* ---------- design team: queue ---------- */
+function openCount(key) { return PROJECTS.filter(function (p) { return p.assignee === key && p.status !== "Ready"; }).length; }
+function firmCounts() {
+  var c = { All: PROJECTS.length, Unassigned: 0, "Needs info": 0, "In design": 0, Ready: 0 };
+  PROJECTS.forEach(function (p) {
+    if (!p.assignee && p.status !== "Ready") c.Unassigned++;
+    if (p.status === "Needs info") c["Needs info"]++;
+    else if (p.status === "Ready") c.Ready++;
+    else c["In design"]++;
+  });
+  return c;
+}
+function firmMatch(p) {
+  var f = state.filter;
+  if (f === "All") return true;
+  if (f === "Unassigned") return !p.assignee && p.status !== "Ready";
+  if (f === "In design") return p.status === "In design" || p.status === "Received";
+  return p.status === f;
+}
+function assignCell(p) {
+  if (state.staff !== "lead") return esc(p.assignee ? STAFF[p.assignee].short : "Unassigned");
+  if (p.status === "Ready") return esc(p.assignee ? STAFF[p.assignee].short : "Unassigned");
+  return '<select aria-label="Assign ' + p.id + '" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()" onchange="assign(\'' + p.id + '\', this.value)">' +
+    '<option value="">Unassigned</option>' +
+    ['designer1','designer2'].map(function (k) { return '<option value="' + k + '"' + (p.assignee === k ? ' selected' : '') + '>' + STAFF[k].short + '</option>'; }).join("") + '</select>';
+}
+function firmRow(p, withAssign) {
+  return '<tr class="row" tabindex="0" onclick="openWork(\'' + p.id + '\')" onkeydown="if(event.key===\'Enter\')openWork(\'' + p.id + '\')">' +
+    '<td><span class="pid">' + p.id + '</span></td>' +
+    '<td><div class="addr">' + esc(p.address) + '</div><div class="muted">' + esc(TENANTS[p.client].company) + '</div></td>' +
+    '<td class="hide-sm"><span class="src ' + cls(p.source) + '">' + esc(p.source) + '</span></td>' +
+    '<td><span class="chip ' + cls(p.status) + '">' + esc(p.status) + '</span></td>' +
+    (withAssign ? '<td>' + assignCell(p) + '</td>' : '') + '</tr>';
+}
+function viewLead() {
+  var c = firmCounts();
+  function stat(key, label) { return '<button aria-pressed="' + (state.filter === key) + '" onclick="setFilter(\'' + key + '\')"><span class="n">' + c[key] + '</span><span class="l">' + label + '</span></button>'; }
+  var rows = PROJECTS.filter(firmMatch).map(function (p) { return firmRow(p, true); }).join("") || '<tr><td colspan="5" class="empty">Nothing here. Pick another filter.</td></tr>';
+  return shell('<div class="page-head"><div><h1>Intake queue</h1><p>Every plan set from every client, in one place.</p></div></div>' +
+    '<div class="note">Before LoadDesk, items marked <strong>Email</strong> and <strong>Website chat</strong> lived in separate inboxes and chat logs. Here they sit next to portal submissions, so nothing waits in someone\'s mailbox.</div>' +
+    '<div class="strip five">' + stat("All", "All projects") + stat("Unassigned", "Unassigned") + stat("Needs info", "Waiting on client") + stat("In design", "In design") + stat("Ready", "Delivered") + '</div>' +
+    '<table class="projects"><thead><tr><th>No.</th><th>Address and client</th><th class="hide-sm">Source</th><th>Status</th><th>Assigned to</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<div class="section-title"><h3>Workload</h3><p>Open projects per designer</p></div>' +
+    '<div class="strip" style="grid-template-columns:repeat(2,1fr)">' +
+      ['designer1','designer2'].map(function (k) { return '<div style="padding:14px 18px;border-right:1px solid var(--line)"><span class="n" style="font-family:var(--head);font-size:30px;font-weight:600;display:block;line-height:1">' + openCount(k) + '</span><span class="l" style="font-size:14px;color:var(--ink-soft)">' + esc(STAFF[k].short + ', ' + STAFF[k].name) + '</span></div>'; }).join("") + '</div>' +
+    '<div class="section-title"><h3>Registered emails</h3><p>Only these addresses can sign in with Google</p></div>' +
+    '<table class="projects"><thead><tr><th>Email</th><th>Name</th><th>Account</th></tr></thead><tbody>' +
+    REGISTERED.map(function (r) { return '<tr><td>' + esc(r.email) + '</td><td>' + esc(r.name) + '</td><td>' + esc(r.kind === "tenant" ? TENANTS[r.key].company : FIRM) + '</td></tr>'; }).join("") + '</tbody></table>' +
+    '<div class="reg-add"><div class="field"><label for="reg-email">Register an email</label><input id="reg-email" type="email" placeholder="name@company.com"></div>' +
+    '<div class="field"><label for="reg-client">For client</label><select id="reg-client"><option value="sunbelt">Sunbelt Air Co.</option><option value="coastal">Coastal Comfort HVAC</option></select></div>' +
+    '<button class="btn" onclick="registerEmail()">Register email</button></div>');
+}
+function viewDesigner() {
+  var me = state.staff;
+  var mine = PROJECTS.filter(function (p) { return p.assignee === me && p.status !== "Ready"; });
+  var pool = PROJECTS.filter(function (p) { return !p.assignee; });
+  var done = PROJECTS.filter(function (p) { return p.assignee === me && p.status === "Ready"; });
+  var mineRows = mine.map(function (p) { return firmRow(p, false); }).join("") || '<tr><td colspan="4" class="empty">Your queue is clear. Claim something from the pool below.</td></tr>';
+  var poolRows = pool.map(function (p) {
+    return '<tr class="row" tabindex="0" onclick="openWork(\'' + p.id + '\')">' +
+      '<td><span class="pid">' + p.id + '</span></td>' +
+      '<td><div class="addr">' + esc(p.address) + '</div><div class="muted">' + esc(TENANTS[p.client].company) + '</div></td>' +
+      '<td class="hide-sm"><span class="src ' + cls(p.source) + '">' + esc(p.source) + '</span></td>' +
+      '<td><button class="btn small" onclick="event.stopPropagation();claim(\'' + p.id + '\')">Claim</button></td></tr>';
+  }).join("") || '<tr><td colspan="4" class="empty">No unassigned projects.</td></tr>';
+  var doneRows = done.map(function (p) { return firmRow(p, false); }).join("") || '<tr><td colspan="4" class="empty">Nothing delivered yet.</td></tr>';
+  var head = '<thead><tr><th>No.</th><th>Address and client</th><th class="hide-sm">Source</th><th>Status</th></tr></thead>';
+  return shell('<div class="page-head"><div><h1>My queue</h1><p>' + esc(STAFF[me].short) + ', ' + esc(STAFF[me].name) + '. Projects assigned to you, plus the shared pool.</p></div></div>' +
+    '<table class="projects">' + head + '<tbody>' + mineRows + '</tbody></table>' +
+    '<div class="section-title"><h3>Unassigned pool</h3><p>Claim one to start. Email and chat items are already here.</p></div>' +
+    '<table class="projects"><thead><tr><th>No.</th><th>Address and client</th><th class="hide-sm">Source</th><th></th></tr></thead><tbody>' + poolRows + '</tbody></table>' +
+    '<div class="section-title"><h3>Delivered by you</h3></div><table class="projects">' + head + '<tbody>' + doneRows + '</tbody></table>');
+}
+function viewFdash() { return state.staff === "lead" ? viewLead() : viewDesigner(); }
+function openWork(id) { go("fwork", { projectId: id }); }
+function assign(id, key) {
+  var p = find(id);
+  p.assignee = key || null;
+  if (key && p.status === "Received") p.status = "In design";
+  addLog(p, key ? "Assigned to " + STAFF[key].short + " by the design lead." : "Returned to the unassigned pool.");
+  toast(key ? id + " assigned to " + STAFF[key].short + "." : id + " is unassigned.");
+  render();
+}
+function claim(id) {
+  var p = find(id);
+  p.assignee = state.staff;
+  if (p.status === "Received") p.status = "In design";
+  addLog(p, "Claimed by " + STAFF[state.staff].short + ".");
+  toast("You claimed " + id + ".");
+  render();
+}
+
+/* ---------- design team: work screen ---------- */
+function takeoffRows(p) {
+  var area = isNaN(Number(p.sqft)) ? "2,100 sq ft (from plan)" : fmt(p.sqft) + " sq ft";
+  return [
+    ["Conditioned area", area, "High"],
+    ["Ceiling height", "9 ft", "High"],
+    ["Window count", "14", "Medium"],
+    ["Window area", "168 sq ft", "Medium"],
+    ["Bedrooms", p.beds || "3", "High"],
+    ["Front door faces", p.door || "South (from site plan)", "Low"],
+    ["Wall construction", "2x4 frame, R-13", "Low"]
+  ];
+}
+function confirmedAt(p, i) { return !!(p.confirmed && (p.confirmed.all || p.confirmed[i])); }
+function toggleConfirm(id, i, on) { var p = find(id); p.confirmed[i] = on; render(); }
+function confirmAll(id) {
+  var p = find(id);
+  takeoffRows(p).forEach(function (r, i) { p.confirmed[i] = true; });
+  addLog(p, "Inputs confirmed by " + whoAmI() + ".");
+  render();
+}
+function viewWork() {
+  var p = find(state.projectId), isLead = state.staff === "lead";
+  var mine = p.assignee === state.staff, canAct = mine || isLead;
+  var rows = takeoffRows(p);
+  var back = '<div class="crumb"><button class="linkbtn" onclick="go(\'fdash\')">Back to queue</button></div>';
+  var tb = '<div class="titleblock">' +
+    '<div class="big"><div class="k">Project address</div><div class="v">' + esc(p.address) + '</div><div class="muted">' + esc(p.city) + '</div></div>' +
+    '<div><div class="k">Project no.</div><div class="v">' + p.id + '</div></div>' +
+    '<div><div class="k">Client</div><div class="v" style="font-size:17px">' + esc(TENANTS[p.client].company) + '</div></div>' +
+    '<div><div class="k">Status</div><div class="v"><span class="chip ' + cls(p.status) + '">' + esc(p.status) + '</span></div></div>' +
+    '<div><div class="k">Source</div><div class="v"><span class="src ' + cls(p.source) + '">' + esc(p.source) + '</span></div></div>' +
+    '<div><div class="k">Assigned to</div><div class="v" style="font-size:17px">' + esc(p.assignee ? STAFF[p.assignee].short : "Unassigned") + '</div></div>' +
+    '<div><div class="k">Reports</div><div class="v">' + esc(p.scope.map(function (s) { return s.replace("Manual ", ""); }).join(" / ")) + '</div></div></div>';
+
+  var files = '<section class="block"><h3>Plan files (' + p.files.length + ')</h3><div class="files">' +
+    p.files.map(function (f) { return '<div class="file"><div class="thumb">Plan preview</div><div class="nm">' + esc(f) + '</div><button class="btn small ghost" onclick="toast(\'Prototype: preview is not connected.\')">Open</button></div>'; }).join("") + '</div>' +
+    '<p class="muted" style="margin:12px 0 0">Everything the client sent, from any channel, is attached to the project here.</p></section>';
+
+  var allOk = rows.every(function (r, i) { return confirmedAt(p, i); });
+  var take = '<section class="block"><h3>Inputs for the load calculation</h3>' +
+    '<div class="note">Concept: values are suggested from the plans and a designer confirms each one before anything is calculated. Suggestions here are sample values, not a real extraction.</div>' +
+    '<table class="takeoff"><thead><tr><th>Input</th><th>Suggested</th><th>Confidence</th><th>Confirmed</th></tr></thead><tbody>' +
+    rows.map(function (r, i) {
+      var on = confirmedAt(p, i);
+      var dis = (!canAct || p.status === "Ready") ? " disabled" : "";
+      return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td><td><span class="conf ' + r[2] + '">' + r[2] + '</span></td>' +
+        '<td><input type="checkbox" aria-label="Confirm ' + esc(r[0]) + '"' + (on ? " checked" : "") + dis + ' onchange="toggleConfirm(\'' + p.id + '\',' + i + ',this.checked)"></td></tr>';
+    }).join("") + '</tbody></table>' +
+    ((canAct && p.status !== "Ready" && !allOk) ? '<div class="actions" style="margin-top:14px"><span></span><button class="btn small ghost" onclick="confirmAll(\'' + p.id + '\')">Confirm all inputs</button></div>' : '') + '</section>';
+
+  var left = files + take;
+  if (p.status === "Ready" && p.results) left = resultsBlock(p) + files + take;
+
+  var act = '<section class="block"><h3>Actions</h3>';
+  if (!p.assignee) {
+    if (isLead) {
+      act += '<div class="field"><label for="as">Assign to</label><select id="as" onchange="assign(\'' + p.id + '\', this.value)"><option value="">Choose a designer</option><option value="designer1">Designer 1, Alex Tan</option><option value="designer2">Designer 2, Sam Ortiz</option></select></div>';
+    } else {
+      act += '<p class="muted" style="margin:0 0 12px">Nobody owns this one yet.</p><button class="btn" onclick="claim(\'' + p.id + '\')">Claim this project</button>';
+    }
+  } else if (!canAct) {
+    act += '<p class="muted" style="margin:0">Assigned to ' + esc(STAFF[p.assignee].short) + '. You can read it but not change it.</p>';
+  } else if (p.status === "Ready") {
+    act += '<p style="margin:0 0 6px"><strong>Delivered.</strong></p><p class="muted" style="margin:0">The client can download the reports now. A revision request from the client would reopen it.</p>';
+  } else if (p.status === "Needs info") {
+    act += '<div class="note warn" style="margin-bottom:12px">Waiting on the client for:</div><ul class="need">' + p.missing.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join("") + '</ul>' +
+      '<p class="muted" style="margin:0">Switch to the client view and upload the missing items to see this come back to the queue.</p>';
+  } else {
+    act += '<div class="field"><label>Ask the client for</label><div class="askrow">' +
+      ['Window schedule', 'Front door orientation', 'A clearer copy of the plans', 'Equipment preference'].map(function (x) { return '<label><input type="checkbox" class="ri" value="' + esc(x) + '"> ' + esc(x) + '</label>'; }).join("") + '</div></div>' +
+      '<div class="field"><label for="ri-note">Note to client (optional)</label><textarea id="ri-note" placeholder="Anything else the client should know"></textarea></div>' +
+      '<button class="btn ghost small" onclick="requestInfo(\'' + p.id + '\')">Send request to client</button>' +
+      '<hr class="divider"><button class="btn green" onclick="markReady(\'' + p.id + '\')">Mark ready and deliver</button>' +
+      '<p class="muted" style="margin:10px 0 0">The load calculation itself runs in the approved calculation software. Marking ready here stands in for attaching that report.</p>';
+  }
+  act += '</section>';
+
+  var thread = '<section class="block"><h3>Client messages</h3>' + (p.thread.length ?
+    '<ul class="thread">' + p.thread.map(function (m) { return '<li class="' + (m.by === "You" ? "you" : "") + '"><span class="by">' + esc(m.by === "You" ? "Client" : m.by) + '</span>' + esc(m.text) + '</li>'; }).join("") + '</ul>' :
+    '<p class="muted" style="margin:0">No messages yet.</p>') + '</section>';
+  var log = '<section class="block"><h3>Activity</h3><ul class="log">' +
+    p.log.slice().reverse().map(function (l) { return '<li><span class="d">' + esc(l.when) + '</span><span>' + esc(l.text) + '</span></li>'; }).join("") + '</ul></section>';
+
+  return shell(back + tb + '<div class="cols"><div>' + left + '</div><div>' + act + thread + log + '</div></div>');
+}
+function requestInfo(id) {
+  var p = find(id);
+  var picks = Array.prototype.map.call(document.querySelectorAll(".ri:checked"), function (el) { return el.value; });
+  var note = document.getElementById("ri-note").value.trim();
+  if (!picks.length && !note) { toast("Pick at least one item or write a note."); return; }
+  p.missing = picks.length ? picks : [note];
+  p.status = "Needs info";
+  p.thread.push({ by: "Design team", text: note || ("We need a few items before we can continue: " + picks.join(", ") + ".") });
+  addLog(p, whoAmI() + " asked the client for: " + (picks.length ? picks.join(", ") : "a note") + ".");
+  toast("Request sent. The client sees it as Needs info.");
+  render();
+}
+function markReady(id) {
+  var p = find(id);
+  var rows = takeoffRows(p);
+  var ok = rows.every(function (r, i) { return confirmedAt(p, i); });
+  if (!ok) { toast("Confirm every input before marking this ready."); return; }
+  var area = isNaN(Number(p.sqft)) ? 2100 : Number(p.sqft);
+  var cooling = Math.round(area * 13.2 / 100) * 100;
+  p.results = { cooling: cooling, heating: Math.round(area * 6.6 / 100) * 100, tons: Math.round(cooling / 12000 * 10) / 10, cfm: Math.round(cooling / 12000 * 400 / 10) * 10, sensible: 0.76, indoor: DESIGN_RES.indoor, outdoor: DESIGN_RES.outdoor };
+  p.status = "Ready"; p.missing = [];
+  p.thread.push({ by: "Design team", text: "Report delivered. Let us know if anything changes before permit." });
+  addLog(p, "Marked ready by " + whoAmI() + ".");
+  toast(id + " delivered. The client can download it now.");
+  render();
+}
+
+/* ---------- story helpers ---------- */
+function fastForward() {
+  var p = find(state.storyProject);
+  if (!p || p.status === "Needs info") return;
+  p.assignee = p.assignee || "designer1";
+  p.status = "Needs info";
+  p.missing = ["Is the garage conditioned space?"];
+  p.thread.push({ by: "Design team", text: "Quick question while reviewing the plans: is the garage conditioned space?" });
+  addLog(p, "Designer asked the client a question.");
+  state.story = "B2";
+  render();
+}
+function replay() {
+  PROJECTS = JSON.parse(INITIAL);
+  REGISTERED = JSON.parse(INITIAL_REG);
+  nextNum = 1055;
+  state.tenant = null; state.staff = null; state.projectId = null; state.storyProject = null;
+  state.filter = "All"; state.query = ""; state.error = ""; state.step = 1; state.draft = null; state.story = "A"; state.userName = null; state.picker = false;
+  go("login");
+}
+function endStory() { state.story = "X"; render(); }
+
+/* ---------- router ---------- */
+function render() {
+  var app = document.getElementById("app");
+  var signedIn = state.tenant || state.staff;
+  if (state.view !== "login" && !signedIn) state.view = "login";
+  if ((state.view === "fdash" || state.view === "fwork") && !state.staff) state.view = "dashboard";
+  if ((state.view === "dashboard" || state.view === "new" || state.view === "project") && !state.tenant) state.view = state.staff ? "fdash" : "login";
+  if (state.view === "login") app.innerHTML = viewLogin();
+  else if (state.view === "dashboard") { app.innerHTML = viewDashboard(); var s = document.getElementById("search"); if (s && state.query) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
+  else if (state.view === "new") app.innerHTML = viewNew();
+  else if (state.view === "project") app.innerHTML = viewProject();
+  else if (state.view === "fdash") app.innerHTML = viewFdash();
+  else if (state.view === "fwork") app.innerHTML = viewWork();
+}
+render();
+</script>
+</body>
+</html>
