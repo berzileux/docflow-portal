@@ -379,7 +379,7 @@ function viewLogin() {
   return storyBar() + '<div class="login' + (state.story ? ' withbar' : '') + '"><section class="login-art">' +
     '<div><div class="brand">Load<span>Desk</span></div>' +
     '<h1>Plans in. Load calcs back.</h1>' +
-    '<p>One front door for every plan set, one queue for the design team, and one place for clients to get their reports.</p>' + planSvg() + '</div>' +
+    '<p>One front door for every plan set, one queue for the design team, and one place for clients to get their reports. Gaps are caught before the drawings go out, not after review sends them back.</p>' + planSvg() + '</div>' +
     '<div class="art-note">Concept prototype. Sample data only. Names are made up and not affiliated with any real company.</div></section>' +
     '<section class="login-form-wrap"><div class="login-form">' +
     '<h2>Sign in</h2><p class="sub">Use the Google account your company registered with us.</p>' +
@@ -591,7 +591,7 @@ function viewNew() {
     ];
     var missing = checks.filter(function (c) { return !c[0]; });
     body = '<div class="panel"><h2 style="margin-bottom:6px">Review and send</h2>' +
-      '<div class="note">Before this goes to the design team, the portal checks that the basics are there. Items marked below are the ones most likely to hold a project up.</div>' +
+      '<div class="note">Before this goes to the design team, the portal checks that the basics are there. Items marked below are the ones most likely to come back as a permit comment.</div>' +
       '<ul class="review-list">' + checks.map(function (c) { return '<li class="' + (c[0] ? 'ok' : 'miss') + '">' + (c[0] ? esc(c[1]) + ' provided' : esc(c[2])) + '</li>'; }).join("") + '</ul>' +
       (missing.length ? '<p class="muted">You can still send it. It will show as Needs info until the missing items are added.</p>' : '<p class="muted">Everything needed is in. This goes straight into the design queue.</p>') +
       '<div class="actions"><button class="btn ghost" onclick="prevStep()">Back</button><button class="btn" onclick="submitProject()">Send to design team</button></div></div>';
@@ -660,7 +660,7 @@ function resultsBlock(p, withNote) {
 function viewProject() {
   var p = find(state.projectId), left = "", right = "";
   if (p.status === "Needs info") {
-    left += '<section class="block"><h3>What we need from you</h3><ul class="need">' + p.missing.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join("") +
+    left += '<section class="block"><h3>Holding this project up</h3><ul class="need">' + p.missing.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join("") +
       '</ul><button class="btn" onclick="provideInfo(\'' + p.id + '\')">Send what\'s missing</button></section>';
   }
   if (p.status === "Ready" && p.results) left += resultsBlock(p);
